@@ -1,17 +1,10 @@
 __pycache__/
 *.py[cod]
 
-figures/
+/figures/
+latex/
 *_rebuilt.csv
 
 .Rhistory
 .RData
 .Rproj.user/
-
-latex/*.aux
-latex/*.log
-latex/*.out
-latex/*.toc
-latex/*.fls
-latex/*.fdb_latexmk
-latex/*.synctex.gz
