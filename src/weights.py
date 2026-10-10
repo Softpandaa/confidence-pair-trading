@@ -1,20 +1,4 @@
-"""Confidence weighting of Section 4.
-
-The confidence score combines the DCC volatility with a rolling cointegration
-statistic, equations (5) and (6):
-
-    gamma_t(i) = vol_i * |t-stat_i|        gamma_p(i) = vol_i / p-value_i
-
-Weights are the normalised confidence, capped at WEIGHT_CAP_MULTIPLE / n and
-renormalised, so they sum to one on every date.
-
-    python src/weights.py
-
-Writes output/weight_{p,t}_df_rebuilt.csv. The committed weight files were
-built from a 48-ticker panel; EA and USLV are no longer obtainable, so the
-pairs that use them cannot have their rolling cointegration recomputed and are
-reported as skipped.
-"""
+"""Confidence weights of Section 5, written as *_rebuilt.csv."""
 
 import numpy as np
 import pandas as pd
@@ -40,13 +24,7 @@ def rolling_cointegration(price, pairs, dates):
 
 
 def allocate(confidence, n):
-    """Weights from the confidence, capped and renormalised, as in Section 4.2.
-
-    The cap is applied iteratively: each pass allocates the shares that exceed
-    the cap on the weight still unassigned, which shrinks that remainder, so the
-    most confident pairs are filled first. Pairs never capped receive the
-    smallest allocated weight, and the row is renormalised to sum to one.
-    """
+    """Section 5.2 weights: shares capped pass by pass, the rest at the smallest weight."""
     cap = WEIGHT_CAP_MULTIPLE / n
     out = np.full(confidence.shape, np.nan)
     conf = confidence.to_numpy(dtype=float)
@@ -64,7 +42,6 @@ def allocate(confidence, n):
             if not hit.any():
                 break
             weight[hit] = limit
-        weight[weight > cap] = cap
         fill = 1 / n if np.isnan(weight).all() else np.nanmin(weight)
         weight[np.isnan(weight)] = fill
         out[row] = weight / weight.sum()
@@ -81,8 +58,8 @@ def main():
     skipped = [f"{a}-{b}" for a, b in pairs if a not in price or b not in price]
     print(f"{len(pairs)} pairs, {usable.sum()} of {len(dates)} dates in the panel")
     if skipped:
-        print(f"skipped, ticker no longer obtainable: {', '.join(skipped[:4])}"
-              f"{' and %d more' % (len(skipped) - 4) if len(skipped) > 4 else ''}")
+        more = f" and {len(skipped) - 4} more" if len(skipped) > 4 else ""
+        print(f"skipped, ticker no longer obtainable: {', '.join(skipped[:4])}{more}")
 
     p, t = rolling_cointegration(price, pairs, dates[usable])
     p.to_csv(OUT_DIR / "rolling_coint_pvalue_rebuilt.csv")

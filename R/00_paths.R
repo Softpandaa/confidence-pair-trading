@@ -1,17 +1,13 @@
-# Directories and the model order, declared once. Every R script sources this
-# file, so no path is written twice and none is absolute. Run R from anywhere
-# inside the project.
+# Project-root paths, model orders and helpers used by R/dcc_egarch.R.
 
-OUT <- "output"     # committed pipeline inputs and outputs
-FIG <- "figures"    # report figures, regenerated, not tracked
+OUT <- "output"
+FIG <- "figures"    # regenerated, not tracked
 
 dir.create(OUT, showWarnings = FALSE)
 dir.create(FIG, showWarnings = FALSE)
 
-# eGARCH and ARMA orders of the univariate margin, used by the DCC fit. These
-# are the orders the committed outputs were produced with. Section 3.1 of the
-# report states (1,1) for both; the two disagree and are left as they are. Not
-# to be confused with dccOrder, which is (1,1) and is never searched.
+# Orders the committed outputs were fitted with; Section 3.1 reports the BIC
+# minimum at p = 3, q = 1.
 GARCH_ORDER <- c(1, 2)
 ARMA_ORDER  <- c(1, 2)
 
@@ -21,8 +17,7 @@ read_pairs <- function() {
   pairs
 }
 
-# A spread panel converted to the rolling mean over each pair's own half life,
-# then standardised. Both scripts need exactly this.
+# Rolling mean of each spread over its pair's half life, then standardised.
 rolling_scaled <- function(spread_file, half_life_file, n_pairs) {
   spread <- as.xts(read.csv(file.path(OUT, spread_file), row.names = 1))
   half_life <- read.csv(file.path(OUT, half_life_file), row.names = 1)

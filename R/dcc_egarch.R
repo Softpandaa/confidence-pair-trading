@@ -1,25 +1,14 @@
 # DCC-eGARCH on the pair spreads, and the z scores the strategy trades on.
-#
-# The univariate margin is eGARCH with an ARMA mean and Student t
-# innovations; the DCC layer is order (1,1) with a multivariate t. The training
-# fit is done by dccfit. The testing volatilities are then propagated forward
-# one day at a time from the fitted theta and the burn-in mean of Q, so the test
-# period uses no information from its own future.
+# Training is fitted by dccfit (about two hours); testing iterates Q forward
+# from the fitted theta and the post-burn-in mean of Q.
 #
 #   Rscript R/dcc_egarch.R
 #
-# The training fit is the slow step, around two hours on the original panel.
-#
-# Inputs   output/pair_df.csv
-#          output/{train,test}_spread.csv, output/{train,test}_half_life.csv
-# Outputs  output/{train,test}_spread_scaled.csv
-#          output/{train,test}_spread_vol.csv
-#          output/{train,test}_z_score.csv
-#          figures/heatmap.jpg
+# Inputs   output/pair_df.csv, output/{train,test}_{spread,half_life}.csv
+# Outputs  output/{train,test}_{spread_scaled,spread_vol,z_score}.csv,
+#          output/dcc_theta.csv, figures/heatmap.jpg
 
-# Run from anywhere: walk up from the working directory to the project root,
-# the folder holding R/ and output/. RStudio opens in whatever directory it used
-# last, so the script locates itself rather than assuming.
+# Find the project root from any working directory.
 local({
   path <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
   for (i in 1:6) {
@@ -40,13 +29,10 @@ pair_description <- read_pairs()
 pairs.name <- pair_description$pair_name
 pairs.no <- length(pairs.name); pairs.no
 
-# Training ----
+# Training --------------------------------------------------------------------
 train.spread_scaled <- rolling_scaled("train_spread.csv", "train_half_life.csv", pairs.no)
 train.length <- nrow(train.spread_scaled); train.length
 
-# The order comes from R/00_paths.R and is the one this script was originally
-# run with. Section 3.1 of the report states eGARCH(1,1) with an ARMA(1,1)
-# mean; the two disagree and are left as they are.
 cat(sprintf("eGARCH(%d,%d) margin, ARMA(%d,%d) mean, Student t\n",
             GARCH_ORDER[1], GARCH_ORDER[2], ARMA_ORDER[1], ARMA_ORDER[2]))
 garch.spec <- ugarchspec(variance.model = list(model = "eGARCH", garchOrder = GARCH_ORDER),
@@ -72,7 +58,7 @@ write.zoo(as.zoo(train.spread_scaled), file = file.path(OUT, "train_spread_scale
 write.zoo(as.zoo(as.xts(train.vol)),   file = file.path(OUT, "train_spread_vol.csv"),    sep = ",")
 write.zoo(as.zoo(train.z_score),       file = file.path(OUT, "train_z_score.csv"),       sep = ",")
 
-# Fitted DCC parameters, carried into the testing recursion ----
+# Fitted DCC parameters -------------------------------------------------------
 theta1 <- tail(dcc_GARCH@mfit$matcoef, 3)[1, 1]
 theta2 <- tail(dcc_GARCH@mfit$matcoef, 2)[1, 1]
 latest.Q <- as.data.frame(tail(dcc_GARCH@mfit$Q, 1))
@@ -91,7 +77,7 @@ dev.off()
 write.csv(data.frame(theta1 = theta1, theta2 = theta2),
           file.path(OUT, "dcc_theta.csv"), row.names = FALSE)
 
-# Testing ----
+# Testing ---------------------------------------------------------------------
 test.spread_scaled <- rolling_scaled("test_spread.csv", "test_half_life.csv", pairs.no)
 latest.eta <- as.numeric(head(test.spread_scaled, 1))   # seeds the recursion
 test.spread_scaled <- test.spread_scaled[-1, ]

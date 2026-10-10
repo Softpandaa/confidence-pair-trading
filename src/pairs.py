@@ -1,14 +1,4 @@
-"""Pair formation of Section 2: cointegration screen, Kalman hedge ratio, half life.
-
-    python src/pairs.py
-
-Reads data/prices.csv and writes the rebuilt pair list and spreads under
-output/ with a _rebuilt suffix, so the committed files are never overwritten.
-
-The committed pair_df.csv was produced from a 48-ticker panel. EA, USLV, TWTR
-and ATVI are no longer obtainable, so this rerun works from 47 tickers and will
-not reproduce the same 73 pairs; the overlap is printed.
-"""
+"""Pair formation of Section 2, written as *_rebuilt.csv so the committed files stay intact."""
 
 import numpy as np
 import pandas as pd
@@ -51,9 +41,11 @@ def spread_of(frame, t0, t1):
 
 
 def half_life(spread):
-    """Days for a deviation to decay by half, from the AR(1) coefficient."""
-    lag = spread.shift(1); lag.iloc[0] = lag.iloc[1]
-    delta = spread - lag; delta.iloc[0] = delta.iloc[1]
+    """Half life -ln 2 / kappa of equation (3), in whole days, at least one."""
+    lag = spread.shift(1)
+    lag.iloc[0] = lag.iloc[1]
+    delta = spread - lag
+    delta.iloc[0] = delta.iloc[1]
     beta = sm.OLS(delta, sm.add_constant(lag)).fit().params.iloc[1]
     return max(1, int(round(-np.log(2) / beta, 0)))
 
@@ -67,9 +59,7 @@ def main():
 
     found = []
     for i, t0 in enumerate(tickers):
-        for j, t1 in enumerate(tickers):
-            if i <= j:
-                continue
+        for t1 in tickers[:i]:
             if coint(train[t0], train[t1])[1] < COINT_LEVEL:
                 found.append([t0, t1])
     print(f"cointegrated pairs at {COINT_LEVEL:.0%}: {len(found)}")
@@ -86,7 +76,7 @@ def main():
     committed = pd.read_csv(PAIR_FILE, index_col=0)
     old = {frozenset(r) for r in committed[["Ticker 1", "Ticker 2"]].to_numpy()}
     new = {frozenset(p) for p in found}
-    print(f"overlap with the committed 73 pairs: {len(old & new)}")
+    print(f"overlap with the committed {len(old)} pairs: {len(old & new)}")
 
 
 if __name__ == "__main__":
