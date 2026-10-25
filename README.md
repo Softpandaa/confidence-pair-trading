@@ -21,7 +21,7 @@ The report and slides are distributed as compiled PDFs. Their typesetting source
 
 ## Data
 
-`data/prices.csv` are the daily closing price from Yahoo Finance over 3 January 2012 to 29 December 2023. `data/quotes/` holds one OHLCV file per traded ticker over the testing window, and these are the only data the backtest reads.
+`data/prices.csv` holds the daily closing prices from Yahoo Finance over 3 January 2012 to 29 December 2023. `data/quotes/` holds one OHLCV file per traded ticker over the testing window, and these are the only data the backtest reads.
 
 ## Reproducing
 
@@ -32,4 +32,4 @@ pip install -r requirements.txt
 python src/backtest.py
 ```
 
-This reads the committed signals and weights in `output/`, reproduces the metrics quoted above and writes `output/backtest_metrics.csv`. `R/dcc_egarch.R` needs `rugarch` and `rmgarch`.
+This reads the committed signals and weights in `output/`, reproduces Table 2 of the report except the Sharpe ratio and writes `output/backtest_metrics.csv`. `R/dcc_egarch.R` needs `rugarch` and `rmgarch`.
