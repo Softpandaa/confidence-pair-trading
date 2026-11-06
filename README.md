@@ -1,10 +1,10 @@
-# Confidence-Weighted Pair Trading via DCC-eGARCH
+# Confidence-Weighted Pairs Trading via DCC-EGARCH
 
-Cointegration-based pair trading on a pool of 45 US equities and ETFs, backtested in BackTrader from 23 August 2021 to 29 December 2023. Pairs are selected by the Engle-Granger test, the time-varying hedge ratio is estimated by a Kalman filter, the spread is standardized and modeled by a DCC-eGARCH conditional volatility. We optimize the entry and exit thresholds, and propose a confidence-weighting scheme based on the rolling cointegration statistic and forecast volatility. 
+This study asks whether optimizing the entry and exit thresholds pair by pair and weighting the pairs by a confidence score improve a pairs trading portfolio of 45 US equities and ETFs, backtested from August 2021 to December 2023. Pairs come from the Engle–Granger cointegration test, hedge ratios from a Kalman filter and spread volatility from a DCC-EGARCH model.
 
 ## Findings
 
-Optimizing the thresholds does not pay for itself. Against equal weight with fixed thresholds, equal weight with optimized thresholds improves returns but increases volatility and drawdown by more, so the Sharpe ratio falls from 1.32 to 1.17. Nevertheless, combined with a confidence score based on the rolling cointegration statistic and forecast volatility, it delivers the highest total return and the lowest drawdown. The Sharpe ratio is also highest at 1.43.
+Net of transaction costs, optimizing the thresholds raises the total return from 158.68% to 179.99% but lowers the Sharpe ratio from 1.32 to 1.17, as volatility and drawdown rise by more. Adding confidence weights based on the rolling cointegration p-value and forecast volatility delivers the highest total return, the highest Sharpe ratio at 1.43 and the lowest drawdown.
 
 ## Layout
 
